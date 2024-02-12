@@ -28,5 +28,6 @@
   "repository": {
     "type": "git",
     "url": "local"
-  }
+  },
+  "devDependencies": {}
 }
