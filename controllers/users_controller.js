@@ -1,64 +1,59 @@
 const User = require('../models/user');
+const fs = require('fs');
+const path = require('path');
 
-
-module.exports.profile =  function(req, res){
+// let's keep it same as before
+module.exports.profile = function(req, res){
     User.findById(req.params.id, function(err, user){
         return res.render('user_profile', {
             title: 'User Profile',
             profile_user: user
         });
-    })
-}
-module.exports.update= async function(req,res){
-    // if(req.user.id==req.params.id){
-    //     User.findByIdAndUpdate(req.params.id, req.body , function(err,user){
-    //     req.flash('success', 'Updated!');
-    //     return res.redirect('back');
-    //     });
-    // }
-    //     else{
-    //         req.flash('error', 'Unauthorized')
-    //         return res.status(401).send('Unauthorised');
-    //     }
-    if(req.user.id==req.params.id){
-        try{
-            let user=await User.findById(req.params.id);
-            User.uploadedAvatar(req,res, async function(err){
-                if(err){
-                    console.log('*****Multer Error:' , err);
-                }
-                user.name=  req.body.name;
-                user.email=  req.body.email;
+    });
 
-                if(req.file){
-                    //  this is saving the path of the uploaded file into the avatar field in the user
-                    user.avatar=  User.avatarPath + "/"+ req.file.filename ;
+}
+
+
+module.exports.update = async function(req, res){
+   
+
+    if(req.user.id == req.params.id){
+
+        try{
+
+            let user = await User.findById(req.params.id);
+            User.uploadedAvatar(req, res, function(err){
+                if (err) {console.log('*****Multer Error: ', err)}
+                
+                user.name = req.body.name;
+                user.email = req.body.email;
+
+                if (req.file){
+
+                    if (user.avatar){
+                        fs.unlinkSync(path.join(__dirname, '..', user.avatar));
+                    }
+
+
+                    // this is saving the path of the uploaded file into the avatar field in the user
+                    user.avatar = User.avatarPath + '/' + req.file.filename;
                 }
-                await user.save();
+                user.save();
                 return res.redirect('back');
             });
-        }
-        // User.uploadedAvatar(req, res);
 
-        // // Update user properties
-        // user.name = req.body.name;
-        // user.email = req.body.email;
-
-        // // Update avatar path if file was uploaded
-        // if (req.file) {
-        //     user.avatar = User.avatarPath + "/" + req.file.filename;
-        // }
-        // await user.save();
-        // return res.redirect('back');
-        catch(err){
-            req.flash('error',err);
+        }catch(err){
+            req.flash('error', err);
             return res.redirect('back');
         }
+
+
     }else{
-        req.flash('error', 'Unauthorized')
-        return res.status(401).send('Unauthorised');
+        req.flash('error', 'Unauthorized!');
+        return res.status(401).send('Unauthorized');
     }
 }
+
 
 // render the sign up page
 module.exports.signUp = function(req, res){
@@ -101,7 +96,7 @@ module.exports.create = function(req, res){
                 return res.redirect('/users/sign-in');
             })
         }else{
-            req.flash('success', 'You have sighned in!!')
+            req.flash('success', 'You have signed up, login to continue!');
             return res.redirect('back');
         }
 
